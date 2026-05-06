@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dugong Entertainment</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --green: #00ff99;
+  --green-dim: #00cc77;
+  --green-dark: #003322;
+  --bg1: #020f0a;
+  --bg2: #041a10;
+  --bg3: #062b1c;
+  --white: #f0fff8;
+  --gray: #a0c4b4;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg1);
+  color: var(--white);
+  overflow-x: hidden;
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR ── */
+#cursor {
+  width: 16px; height: 16px;
+  border: 2px solid var(--green);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.15s, background 0.15s;
+  mix-blend-mode: screen;
+}
+#cursor-trail {
+  width: 8px; height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  position: fixed;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.5;
+  transition: left 0.08s, top 0.08s;
+}
+body:hover #cursor { transform: scale(1); }
+
+/* ── CANVAS BG ── */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── LOADING SCREEN ── */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: var(--bg1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+  gap: 0;
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+
+#loading.done { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.loading-logo {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(0.7);
+  animation: loadLogoIn 0.8s 0.3s forwards;
+  box-shadow: 0 0 30px rgba(0,255,153,0.3);
+}
+
+@keyframes loadLogoIn {
+  to { opacity: 1; transform: scale(1); }
+}
+
+.loading-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--gray);
+  margin-top: 28px;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeIn 0.5s 0.8s forwards;
+}
+
+@keyframes fadeIn { to { opacity: 1; } }
+
+.loading-bar-wrap {
+  width: 220px;
+  height: 2px;
+  background: rgba(0,255,153,0.1);
+  border-radius: 999px;
+  overflow: hidden;
+  opacity: 0;
+  animation: fadeIn 0.5s 0.9s forwards;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--green-dim), var(--green), #80ffcc);
+  border-radius: 999px;
+  box-shadow: 0 0 10px var(--green);
+  transition: width 0.05s linear;
+}
+
+.loading-percent {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--green);
+  margin-top: 16px;
+  letter-spacing: 2px;
+  opacity: 0;
+  animation: fadeIn 0.5s 0.9s forwards;
+  font-variant-numeric: tabular-nums;
+}
+
+.loading-status {
+  font-size: 11px;
+  color: var(--gray);
+  letter-spacing: 2px;
+  margin-top: 8px;
+  min-height: 16px;
+  opacity: 0;
+  animation: fadeIn 0.5s 1s forwards;
+}
+
+/* ── OPENING SCREEN ── */
+#opening {
+  position: fixed;
+  inset: 0;
+  background: var(--bg1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  transition: opacity 1s ease, visibility 1s;
+  gap: 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+#opening.ready { opacity: 1; visibility: visible; }
+
+#opening .logo-ring {
+  position: relative;
+  width: 160px; height: 160px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+#opening .logo-ring::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--green);
+  border-right-color: var(--green-dim);
+  animation: spin 2s linear infinite;
+}
+
+#opening .logo-ring::after {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  border-bottom-color: var(--green);
+  animation: spin 3s linear infinite reverse;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#opening img.open-logo {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 40px rgba(0,255,153,0.4), 0 0 80px rgba(0,255,153,0.1);
+}
+
+#opening .brand-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(22px, 6vw, 42px);
+  letter-spacing: 8px;
+  color: var(--white);
+  margin-top: 30px;
+  text-align: center;
+}
+
+#opening .brand-name span { color: var(--green); }
+
+#opening .tagline {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--gray);
+  margin-top: 8px;
+  letter-spacing: 2px;
+}
+
+#opening .enter-btn {
+  margin-top: 40px;
+  padding: 14px 40px;
+  border: 1px solid var(--green);
+  background: transparent;
+  color: var(--green);
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: none;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s;
+}
+
+#opening .enter-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--green);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+
+#opening .enter-btn:hover::before { transform: scaleX(1); }
+#opening .enter-btn:hover { color: var(--bg1); }
+#opening .enter-btn span { position: relative; z-index: 1; }
+
+#opening.hidden-out { opacity: 0; visibility: hidden; }
+
+/* ── HEADER ── */
+header {
+  position: fixed;
+  top: 0; width: 100%;
+  display: flex;
+  flex-direction: column;
+  z-index: 50;
+}
+
+#scroll-progress {
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, var(--green-dim), var(--green), #80ffcc);
+  box-shadow: 0 0 10px var(--green);
+  transition: width 0.1s linear;
+  flex-shrink: 0;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 32px;
+  background: rgba(2,15,10,0.88);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(0,255,153,0.1);
+}
+
+header .h-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 4px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+header nav {
+  display: flex;
+  gap: 3px;
+  background: rgba(0,255,153,0.05);
+  border: 1px solid rgba(0,255,153,0.12);
+  border-radius: 999px;
+  padding: 4px;
+}
+
+header nav a {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gray);
+  text-decoration: none;
+  padding: 7px 18px;
+  border-radius: 999px;
+  transition: color 0.25s, background 0.25s, box-shadow 0.25s;
+  white-space: nowrap;
+}
+
+header nav a:hover {
+  color: var(--white);
+  background: rgba(0,255,153,0.1);
+}
+
+header nav a.active {
+  color: var(--bg1);
+  background: var(--green);
+  box-shadow: 0 0 14px rgba(0,255,153,0.5);
+}
+
+/* hamburger */
+#hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: none;
+  padding: 4px;
+  background: none;
+  border: none;
+}
+#hamburger span {
+  display: block;
+  width: 22px; height: 2px;
+  background: var(--green);
+  border-radius: 2px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+#hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+#hamburger.open span:nth-child(2) { opacity: 0; }
+#hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+#mobile-nav {
+  display: none;
+  flex-direction: column;
+  background: rgba(2,15,10,0.97);
+  border-bottom: 1px solid rgba(0,255,153,0.15);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+#mobile-nav.open { max-height: 300px; }
+#mobile-nav a {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gray);
+  text-decoration: none;
+  padding: 16px 28px;
+  border-bottom: 1px solid rgba(0,255,153,0.07);
+  transition: color 0.2s, background 0.2s;
+}
+#mobile-nav a.active,
+#mobile-nav a:hover { color: var(--green); background: rgba(0,255,153,0.05); }
+
+@media (max-width: 640px) {
+  #hamburger { display: flex; }
+  #mobile-nav { display: flex; }
+}
+
+/* ── MAIN ── */
+#main {
+  display: none;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HERO SECTION ── */
+#hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative;
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border: 1px solid rgba(0,255,153,0.3);
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 24px;
+  animation: fadeUp 0.8s 0.2s both;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(40px, 9vw, 96px);
+  line-height: 1.05;
+  font-weight: 700;
+  animation: fadeUp 0.8s 0.4s both;
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--green);
+  display: block;
+}
+
+.hero-sub {
+  margin-top: 24px;
+  font-size: 15px;
+  color: var(--gray);
+  max-width: 480px;
+  line-height: 1.7;
+  animation: fadeUp 0.8s 0.6s both;
+}
+
+.hero-hashtag {
+  margin-top: 32px;
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: 4px;
+  animation: fadeUp 0.8s 0.8s both;
+}
+
+.hero-scroll {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray);
+  font-size: 11px;
+  letter-spacing: 2px;
+  animation: bounce 2s infinite;
+}
+
+.hero-scroll::after {
+  content: '';
+  width: 1px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--green), transparent);
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ── DIVIDER ── */
+.section-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0,255,153,0.3), transparent);
+  margin: 0;
+}
+
+/* ── SECTION BASE ── */
+.section {
+  padding: 100px 24px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.section-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 5vw, 52px);
+  line-height: 1.15;
+  margin-bottom: 32px;
+}
+
+/* ── ABOUT ── */
+#about .about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+#about .about-img-wrap {
+  position: relative;
+}
+
+#about .about-img-wrap img.team-img {
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+#about .about-img-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,255,153,0.2);
+  z-index: -1;
+}
+
+#about .stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.stat-box {
+  background: rgba(0,255,153,0.04);
+  border: 1px solid rgba(0,255,153,0.12);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-box .num {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--green);
+  line-height: 1;
+}
+
+.stat-box .lbl {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+/* ── TEAM ── */
+#team { padding: 80px 24px; max-width: 960px; margin: 0 auto; }
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  margin-top: 40px;
+}
+
+.team-card {
+  background: linear-gradient(135deg, rgba(0,255,153,0.05), rgba(0,0,0,0));
+  border: 1px solid rgba(0,255,153,0.12);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s;
+  position: relative;
+}
+
+.team-card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 0 24px 60px rgba(0,255,153,0.15);
+  border-color: rgba(0,255,153,0.4);
+}
+
+.team-card .card-img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(20%) brightness(0.9);
+  transition: filter 0.4s;
+}
+
+.team-card:hover .card-img { filter: none; }
+
+.team-card .card-body {
+  padding: 20px;
+}
+
+.team-card .role-badge {
+  display: inline-block;
+  background: rgba(0,255,153,0.1);
+  border: 1px solid rgba(0,255,153,0.3);
+  color: var(--green);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 8px;
+}
+
+.team-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+/* ── KEUNIKAN SECTION ── */
+#keunikan { background: rgba(0,255,153,0.03); border-top: 1px solid rgba(0,255,153,0.08); border-bottom: 1px solid rgba(0,255,153,0.08); }
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.feature-item {
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(0,255,153,0.1);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.feature-item:hover {
+  background: rgba(0,255,153,0.06);
+  border-color: rgba(0,255,153,0.3);
+}
+
+.feature-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.feature-item h4 {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.feature-item p { font-size: 13px; color: var(--gray); line-height: 1.6; }
+
+/* ── FANBASE ── */
+.fanbase-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.fanbase-card {
+  border-radius: 16px;
+  padding: 32px 24px;
+  text-align: center;
+  border: 1px solid;
+  transition: transform 0.3s;
+}
+
+.fanbase-card:hover { transform: scale(1.03); }
+
+.fanbase-card.love {
+  background: rgba(0,255,153,0.05);
+  border-color: rgba(0,255,153,0.3);
+}
+
+.fanbase-card.break {
+  background: rgba(255,80,80,0.05);
+  border-color: rgba(255,80,80,0.3);
+}
+
+.fanbase-card .emoji { font-size: 40px; margin-bottom: 12px; display: block; }
+
+.fanbase-card h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.fanbase-card p { font-size: 12px; color: var(--gray); margin-top: 6px; }
+
+/* ── CONTACT ── */
+#contact { max-width: 960px; margin: 0 auto; padding: 80px 24px; }
+
+.contact-list { display: flex; flex-direction: column; gap: 16px; margin-top: 32px; }
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(0,255,153,0.1);
+  transition: border-color 0.3s, background 0.3s;
+}
+
+.contact-card:hover {
+  border-color: rgba(0,255,153,0.4);
+  background: rgba(0,255,153,0.05);
+}
+
+.contact-card .c-icon {
+  width: 48px; height: 48px;
+  background: rgba(0,255,153,0.1);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.contact-card .c-info { flex: 1; }
+.contact-card .c-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+}
+.contact-card .c-role { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+.wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--green);
+  color: var(--bg1);
+  border-radius: 8px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: opacity 0.3s, transform 0.3s;
+  flex-shrink: 0;
+}
+
+.wa-btn:hover { opacity: 0.85; transform: scale(1.05); }
+
+/* ── SOCIAL ── */
+.social-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: 1px solid rgba(0,255,153,0.25);
+  border-radius: 12px;
+  color: var(--white);
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.3s;
+  background: rgba(255,255,255,0.03);
+}
+
+.social-btn:hover {
+  background: rgba(0,255,153,0.1);
+  border-color: var(--green);
+  transform: translateY(-3px);
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid rgba(0,255,153,0.15);
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--gray);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+footer .footer-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--green);
+  letter-spacing: 4px;
+  margin-bottom: 12px;
+}
+
+footer a { color: var(--green); text-decoration: none; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── MARQUEE ── */
+.marquee-wrap {
+  overflow: hidden;
+  border-top: 1px solid rgba(0,255,153,0.1);
+  border-bottom: 1px solid rgba(0,255,153,0.1);
+  padding: 16px 0;
+  background: rgba(0,255,153,0.03);
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 18s linear infinite;
+}
+
+.marquee-track span {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--gray);
+  padding: 0 32px;
+  white-space: nowrap;
+}
+
+.marquee-track span.green { color: var(--green); }
+
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ── GLITCH TITLE ── */
+.glitch {
+  position: relative;
+}
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+}
+.glitch::before {
+  color: #00ffcc;
+  animation: glitch1 3s infinite;
+  clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+.glitch::after {
+  color: #ff0066;
+  animation: glitch2 3s infinite;
+  clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+@keyframes glitch1 {
+  0%, 90%, 100% { transform: translate(0); }
+  92% { transform: translate(-3px, 1px); }
+  94% { transform: translate(3px, -1px); }
+  96% { transform: translate(-2px); }
+}
+@keyframes glitch2 {
+  0%, 90%, 100% { transform: translate(0); }
+  92% { transform: translate(3px, -1px); }
+  94% { transform: translate(-3px, 1px); }
+  96% { transform: translate(2px); }
+}
+
+/* ── MUSIC TOGGLE ── */
+#music-btn {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: rgba(0,255,153,0.15);
+  border: 1px solid var(--green);
+  color: var(--green);
+  font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: none;
+  z-index: 60;
+  transition: background 0.3s, transform 0.3s;
+  backdrop-filter: blur(10px);
+}
+#music-btn:hover {
+  background: rgba(0,255,153,0.3);
+  transform: scale(1.1);
+}
+#music-btn.playing { animation: pulse-ring 2s infinite; }
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(0,255,153,0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(0,255,153,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,255,153,0); }
+}
+
+/* ── TIMELINE ── */
+.timeline { margin-top: 32px; position: relative; padding-left: 32px; }
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px; top: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--green), transparent);
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 28px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -28px; top: 6px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+}
+.timeline-item .t-date {
+  font-size: 11px;
+  color: var(--green);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.timeline-item .t-text {
+  font-size: 14px;
+  color: var(--gray);
+  line-height: 1.6;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 640px) {
+  #about .about-grid { grid-template-columns: 1fr; }
+  .fanbase-grid { grid-template-columns: 1fr; }
+  .contact-card { flex-direction: column; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<!-- CANVAS BACKGROUND -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- MUSIC -->
+<audio id="music" loop>
+  <source src="https://cdn.yupra.my.id/yp/b35ip8ph.mp3">
+</audio>
+
+<button id="music-btn" title="Toggle Music">♪</button>
+
+<!-- ══════════════ LOADING ══════════════ -->
+<div id="loading">
+  <img class="loading-logo" src="https://cdn.yupra.my.id/yp/bos48eh2.jpg" alt="Dugong">
+  <div class="loading-label">Dugong Entertainment</div>
+  <div class="loading-bar-wrap">
+    <div class="loading-bar-fill" id="bar-fill"></div>
+  </div>
+  <div class="loading-percent" id="load-percent">0%</div>
+  <div class="loading-status" id="load-status">Memuat...</div>
+</div>
+
+<!-- ══════════════ OPENING ══════════════ -->
+<div id="opening">
+  <div class="logo-ring">
+    <img class="open-logo" src="https://cdn.yupra.my.id/yp/bos48eh2.jpg" alt="Dugong Logo">
+  </div>
+  <div class="brand-name">DUGONG<span> ENT</span></div>
+  <div class="tagline">#salamdugong • since 2025</div>
+  <button class="enter-btn" onclick="startSite()"><span>Masuk ke Website ↓</span></button>
+</div>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div id="main">
+
+  <!-- HEADER -->
+  <header>
+    <div id="scroll-progress"></div>
+    <div class="header-inner">
+      <div class="h-logo">🐬 DUGONG</div>
+      <nav id="main-nav">
+        <a href="#hero" class="nav-link active">Home</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#team" class="nav-link">Team</a>
+        <a href="#keunikan" class="nav-link">Keunikan</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+      <button id="hamburger" onclick="toggleMobile()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div id="mobile-nav">
+      <a href="#hero" onclick="closeMobile()">🏠 Home</a>
+      <a href="#about" onclick="closeMobile()">🌿 About</a>
+      <a href="#team" onclick="closeMobile()">👥 Team</a>
+      <a href="#keunikan" onclick="closeMobile()">🐾 Keunikan</a>
+      <a href="#contact" onclick="closeMobile()">📌 Contact</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-badge">Agensi Halu • Est. 2025</div>
+    <h1 class="hero-title glitch" data-text="Dugong">
+      Dugong<em>Entertainment</em>
+    </h1>
+    <p class="hero-sub">Agensi halu bertemakan hijau alam & hewan, di bawah naungan rvn. Berkarya dengan nuansa alam yang segar dan unik.</p>
+    <div class="hero-hashtag">#SALAMDUGONG 🐬</div>
+    <div class="hero-scroll">SCROLL</div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="marquee-wrap">
+    <div class="marquee-track">
+      <span class="green">#SALAMDUGONG</span>
+      <span>★ DUGONG ENTERTAINMENT</span>
+      <span class="green">DUGONGIE</span>
+      <span>★ HEWAN DUNIA NYATA</span>
+      <span class="green">AGENSI HALU</span>
+      <span>★ EST. 2025</span>
+      <span class="green">#SALAMDUGONG</span>
+      <span>★ DUGONG ENTERTAINMENT</span>
+      <span class="green">DUGONGIE</span>
+      <span>★ HEWAN DUNIA NYATA</span>
+      <span class="green">AGENSI HALU</span>
+      <span>★ EST. 2025</span>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section id="about" class="section">
+    <div class="section-label">Tentang Kami</div>
+    <div class="section-title reveal">Lebih dari Sekadar<br>Agensi Biasa</div>
+    <div class="about-grid reveal">
+      <div class="about-img-wrap">
+        <img class="team-img" src="https://cdn.yupra.my.id/yp/nfelger1.jpg" alt="Tim Dugong">
+      </div>
+      <div>
+        <p style="color:var(--gray);line-height:1.8;font-size:15px;">
+          <strong style="color:var(--white);">Dugong Entertainment</strong> adalah agensi halu yang didirikan pada <strong style="color:var(--green);">20 Mei 2025</strong> oleh Yuyu Kepiting, di bawah naungan rvn.
+        </p>
+        <p style="color:var(--gray);line-height:1.8;font-size:15px;margin-top:16px;">
+          Mengusung konsep <em style="color:var(--green);">hijau alam dan hewan</em>, Dugong Entertainment hadir dengan identitas yang segar, unik, dan berbeda — menggunakan face claim hewan dunia nyata sebagai ciri khas kami.
+        </p>
+        <div class="stat-row" style="margin-top:32px;">
+          <div class="stat-box reveal">
+            <div class="num">35+</div>
+            <div class="lbl">Team Duyung</div>
+          </div>
+          <div class="stat-box reveal">
+            <div class="num">2025</div>
+            <div class="lbl">Tahun Berdiri</div>
+          </div>
+          <div class="stat-box reveal">
+            <div class="num">3</div>
+            <div class="lbl">Platform Sosmed</div>
+          </div>
+          <div class="stat-box reveal">
+            <div class="num">∞</div>
+            <div class="lbl">Kreativitas</div>
+          </div>
+        </div>
+        <!-- Timeline -->
+        <div class="timeline reveal" style="margin-top:36px;">
+          <div class="timeline-item">
+            <div class="t-date">20 Mei 2025</div>
+            <div class="t-text">Dugong Entertainment resmi berdiri, didirikan oleh Yuyu Kepiting.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="t-date">Awal Berdiri</div>
+            <div class="t-text">Konsep hijau alam & hewan mulai diperkenalkan ke publik.</div>
+          </div>
+          <div class="timeline-item">
+            <div class="t-date">Berkembang</div>
+            <div class="t-text">Tim Duyung bertumbuh hingga 35+ anggota aktif.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- TEAM -->
+  <section id="team">
+    <div style="max-width:960px;margin:0 auto;padding:0 0 0 0;">
+      <div class="section-label">Pengurus</div>
+      <div class="section-title reveal">Orang-orang di<br>Balik Dugong 🌿</div>
+      <div class="team-grid">
+
+        <div class="team-card reveal">
+          <img class="card-img" src="https://cdn.yupra.my.id/yp/esi5e1pc.jpg" alt="Yuyu Kepiting">
+          <div class="card-body">
+            <span class="role-badge">Founder</span>
+            <h3>YUYU KEPITING</h3>
+            <p style="color:var(--gray);font-size:13px;margin-top:6px;line-height:1.5;">Pendiri dan kepala dari Dugong Entertainment. Visioner di balik konsep hijau alam.</p>
+          </div>
+        </div>
+
+        <div class="team-card reveal">
+          <img class="card-img" src="https://cdn.yupra.my.id/yp/hmbajdwc.jpg" alt="Yeoha">
+          <div class="card-body">
+            <span class="role-badge">Manager</span>
+            <h3>YEOHA</h3>
+            <p style="color:var(--gray);font-size:13px;margin-top:6px;line-height:1.5;">Mengelola kolaborasi dan proyek bersama pihak eksternal.</p>
+          </div>
+        </div>
+
+        <div class="team-card reveal">
+          <img class="card-img" src="https://cdn.yupra.my.id/yp/o9np71ma.jpg" alt="Lily">
+          <div class="card-body">
+            <span class="role-badge">Staff • Media Partner</span>
+            <h3>LILY</h3>
+            <p style="color:var(--gray);font-size:13px;margin-top:6px;line-height:1.5;">Menangani media partnership dan promosi Dugong Entertainment.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- KEUNIKAN -->
+  <section id="keunikan" class="section">
+    <div class="section-label">Yang Membuat Kami Beda</div>
+    <div class="section-title reveal">Keunikan<br>Dugong 🐾</div>
+    <div class="feature-grid">
+      <div class="feature-item reveal">
+        <span class="feature-icon">🦭</span>
+        <h4>Face Claim Hewan Nyata</h4>
+        <p>Menggunakan hewan dunia nyata sebagai face claim — konsep yang benar-benar unik di dunia agensi halu.</p>
+      </div>
+      <div class="feature-item reveal">
+        <span class="feature-icon">🌿</span>
+        <h4>Tema Alam Hijau</h4>
+        <p>Identitas visual berlandaskan alam, hijau, dan ekosistem — menyegarkan di tengah agensi lainnya.</p>
+      </div>
+      <div class="feature-item reveal">
+        <span class="feature-icon">💚</span>
+        <h4>Komunitas Hangat</h4>
+        <p>Fanbase dugongie yang solid dan penuh semangat, bersama tim duyung yang berdedikasi.</p>
+      </div>
+      <div class="feature-item reveal">
+        <span class="feature-icon">🎨</span>
+        <h4>Konten Kreatif</h4>
+        <p>Produksi konten dengan nuansa segar dan orisinal, mencerminkan identitas alam yang kuat.</p>
+      </div>
+    </div>
+
+    <!-- FANBASE -->
+    <div class="section-label" style="margin-top:60px;">Fanbase</div>
+    <div class="section-title reveal">Keluarga<br>Dugong 💚</div>
+    <div class="fanbase-grid">
+      <div class="fanbase-card love reveal">
+        <span class="emoji">💚</span>
+        <h3>DUGONGIE</h3>
+        <p>Fanbase setia yang selalu support Dugong Entertainment</p>
+      </div>
+      <div class="fanbase-card break reveal">
+        <span class="emoji">💔</span>
+        <h3>DUTERS</h3>
+        <p>Mereka yang pernah menjadi bagian dari perjalanan ini</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-label">Hubungi Kami</div>
+    <div class="section-title reveal">Contact<br>Person 🦭💚</div>
+    <div class="contact-list">
+
+      <div class="contact-card reveal">
+        <div class="c-icon">📌</div>
+        <div class="c-info">
+          <div class="c-name">Lily</div>
+          <div class="c-role">Staff / Media Partner — Untuk: Medpart & Promosi</div>
+        </div>
+        <a class="wa-btn" href="https://wa.me/6282332597328">WhatsApp ↗</a>
+      </div>
+
+      <div class="contact-card reveal">
+        <div class="c-icon">📌</div>
+        <div class="c-info">
+          <div class="c-name">Yeoha</div>
+          <div class="c-role">Manager — Untuk: Collaboration & Project</div>
+        </div>
+        <a class="wa-btn" href="https://wa.me/6285863159435">WhatsApp ↗</a>
+      </div>
+
+      <div class="contact-card reveal">
+        <div class="c-icon">📌</div>
+        <div class="c-info">
+          <div class="c-name">Admin Dugong</div>
+          <div class="c-role">Customer Service — Untuk: Kendala & Informasi</div>
+        </div>
+        <a class="wa-btn" href="https://wa.me/6285800672480">WhatsApp ↗</a>
+      </div>
+
+    </div>
+
+    <!-- SOCIAL MEDIA -->
+    <div class="section-label" style="margin-top:60px;">Ikuti Kami</div>
+    <div class="section-title reveal">Social<br>Media 📱</div>
+    <div class="social-row reveal">
+      <a class="social-btn" href="https://whatsapp.com/channel/0029Vb6OPnKGehETo4DZZv3h">
+        💬 WhatsApp Channel
+      </a>
+      <a class="social-btn" href="https://tiktok.com/@dugongent.offcial">
+        🎵 TikTok
+      </a>
+      <a class="social-btn" href="https://youtube.com/@dugongent.official?si=0PTqDGncQpMJD6jB">
+        ▶️ YouTube
+      </a>
+      <a class="social-btn" href="https://chat.whatsapp.com/HeM7UdubkJ1Bp99CTMiusc">
+        🌊 Grup LPM
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">DUGONG ENT</div>
+    <p>© 2025 Dugong Entertainment · All rights reserved</p>
+    <p style="margin-top:6px;">Dibuat dengan 💚 oleh <a href="#">©®JNKIM LANARIEL DE VRIES</a></p>
+    <p style="margin-top:6px;letter-spacing:3px;color:var(--green);">#SALAMDUGONG</p>
+  </footer>
+
+</div><!-- end #main -->
+
+<script>
+/* ── SCROLL PROGRESS + ACTIVE NAV ── */
+function initScrollFeatures() {
+  const bar = document.getElementById('scroll-progress');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const sections = ['hero','about','team','keunikan','contact'];
+
+  window.addEventListener('scroll', () => {
+    // progress bar
+    const scrolled = window.scrollY;
+    const total = document.body.scrollHeight - window.innerHeight;
+    bar.style.width = (scrolled / total * 100) + '%';
+
+    // active nav
+    let current = 'hero';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.getBoundingClientRect().top <= 100) current = id;
+    });
+
+    navLinks.forEach(a => {
+      const target = a.getAttribute('href').replace('#','');
+      a.classList.toggle('active', target === current);
+    });
+
+    // mobile nav active
+    document.querySelectorAll('#mobile-nav a').forEach(a => {
+      const target = a.getAttribute('href').replace('#','');
+      a.classList.toggle('active', target === current);
+    });
+  });
+}
+
+function toggleMobile() {
+  const mn = document.getElementById('mobile-nav');
+  const hb = document.getElementById('hamburger');
+  mn.classList.toggle('open');
+  hb.classList.toggle('open');
+}
+
+function closeMobile() {
+  document.getElementById('mobile-nav').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+
+/* ── LOADING BAR ── */
+const steps = [
+  { pct: 15, msg: 'Memuat aset...' },
+  { pct: 35, msg: 'Menyiapkan konten...' },
+  { pct: 55, msg: 'Memanggil dugong...' },
+  { pct: 75, msg: 'Hampir siap...' },
+  { pct: 90, msg: 'Finishing touch...' },
+  { pct: 100, msg: '#SalamDugong 💚' },
+];
+
+const barFill = document.getElementById('bar-fill');
+const loadPct = document.getElementById('load-percent');
+const loadStatus = document.getElementById('load-status');
+const loadingEl = document.getElementById('loading');
+const openingEl = document.getElementById('opening');
+
+let currentPct = 0;
+let stepIdx = 0;
+
+function animateBar() {
+  if (stepIdx >= steps.length) return;
+  const target = steps[stepIdx].pct;
+  loadStatus.textContent = steps[stepIdx].msg;
+
+  const interval = setInterval(() => {
+    if (currentPct >= target) {
+      clearInterval(interval);
+      stepIdx++;
+      if (stepIdx < steps.length) {
+        setTimeout(animateBar, Math.random() * 300 + 150);
+      } else {
+        // Done — show opening
+        setTimeout(() => {
+          loadingEl.classList.add('done');
+          setTimeout(() => openingEl.classList.add('ready'), 400);
+        }, 600);
+      }
+      return;
+    }
+    currentPct++;
+    barFill.style.width = currentPct + '%';
+    loadPct.textContent = currentPct + '%';
+  }, 18);
+}
+
+window.addEventListener('load', () => {
+  setTimeout(animateBar, 1200);
+});
+
+/* ── CURSOR ── */
+const cursor = document.getElementById('cursor');
+const trail = document.getElementById('cursor-trail');
+let mx = 0, my = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx - 8 + 'px';
+  cursor.style.top = my - 8 + 'px';
+  setTimeout(() => {
+    trail.style.left = mx - 4 + 'px';
+    trail.style.top = my - 4 + 'px';
+  }, 80);
+});
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.style.transform = 'scale(2.5)');
+  el.addEventListener('mouseleave', () => cursor.style.transform = 'scale(1)');
+});
+
+/* ── CANVAS PARTICLES ── */
+const canvas = document.getElementById('bg-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.r = Math.random() * 1.5 + 0.3;
+    this.speed = Math.random() * 0.4 + 0.1;
+    this.opacity = Math.random() * 0.5 + 0.1;
+    this.drift = (Math.random() - 0.5) * 0.2;
+  }
+  update() {
+    this.y -= this.speed;
+    this.x += this.drift;
+    if (this.y < -4) this.reset(), this.y = H + 4;
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,255,153,${this.opacity})`;
+    ctx.fill();
+  }
+}
+
+for (let i = 0; i < 120; i++) particles.push(new Particle());
+
+/* Floating blobs */
+const blobs = [
+  { x: 0.2, y: 0.3, r: 280, t: 0, speed: 0.0007 },
+  { x: 0.8, y: 0.7, r: 220, t: Math.PI, speed: 0.0005 },
+  { x: 0.5, y: 0.1, r: 180, t: 1, speed: 0.0009 },
+];
+
+function drawBlobs() {
+  blobs.forEach(b => {
+    b.t += b.speed;
+    const ox = Math.sin(b.t) * 40;
+    const oy = Math.cos(b.t * 1.3) * 30;
+    const gx = (b.x * W) + ox;
+    const gy = (b.y * H) + oy;
+    const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, b.r);
+    g.addColorStop(0, 'rgba(0,255,153,0.04)');
+    g.addColorStop(1, 'rgba(0,255,153,0)');
+    ctx.beginPath();
+    ctx.arc(gx, gy, b.r, 0, Math.PI * 2);
+    ctx.fillStyle = g;
+    ctx.fill();
+  });
+}
+
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+  drawBlobs();
+  particles.forEach(p => { p.update(); p.draw(); });
+  requestAnimationFrame(loop);
+}
+loop();
+
+/* ── OPENING → MAIN ── */
+const music = document.getElementById('music');
+const musicBtn = document.getElementById('music-btn');
+
+function startSite() {
+  const op = document.getElementById('opening');
+  op.classList.add('hidden-out');
+  document.getElementById('main').style.display = 'block';
+
+  // Autoplay music
+  music.volume = 0.6;
+  music.play().then(() => musicBtn.classList.add('playing')).catch(() => {});
+
+  // Scroll features
+  initScrollFeatures();
+
+  // Observe reveals
+  const revels = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  revels.forEach(el => obs.observe(el));
+}
+
+/* ── MUSIC TOGGLE ── */
+let playing = false;
+musicBtn.addEventListener('click', () => {
+  if (playing) {
+    music.pause();
+    musicBtn.textContent = '♪';
+    musicBtn.classList.remove('playing');
+  } else {
+    music.play();
+    musicBtn.textContent = '■';
+    musicBtn.classList.add('playing');
+  }
+  playing = !playing;
+});
+
+music.addEventListener('play', () => { playing = true; musicBtn.textContent = '■'; });
+music.addEventListener('pause', () => { playing = false; musicBtn.textContent = '♪'; });
+</script>
+</body>
+</html>
